@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raio-X da Partida - Bolão do Bizzão</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .filtro-jogo {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .filtro-jogo select {
+            padding: 10px;
+            font-size: 1.1em;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 100%;
+            max-width: 400px;
+            margin-top: 10px;
+        }
+        .placar-oficial-destaque {
+            margin-top: 15px;
+            font-size: 1.2em;
+            color: #333;
+        }
+        .tabela-raiox { 
+            width: 100%; 
+            border-collapse: collapse; 
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .tabela-raiox th {
+            background: #333;
+            color: white;
+            padding: 12px;
+            text-align: center;
+        }
+        .tabela-raiox td { 
+            padding: 12px; 
+            border-bottom: 1px solid #ddd; 
+            text-align: center; 
+        }
+        .nome-jogador-raiox {
+            font-weight: bold;
+            text-align: left !important;
+        }
+        .pts-ganhos { color: #008000; font-weight: bold; }
+        .pts-zero { color: #999; }
+    </style>
+</head>
+<body class="palpites-page">
+
+    <div class="app-container">
+        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1>Raio-X da Partida ⚽</h1>
+            <a href="palpites.html" class="btn-secundario" style="text-decoration: none; padding: 10px 15px; background: #333; color: white; border-radius: 5px; font-weight: bold;">Voltar</a>
+        </header>
+
+        <main>
+            <div class="filtro-jogo">
+                <label for="select-jogo" style="font-weight: bold; color: #333;">Selecione uma partida em andamento ou encerrada:</label><br>
+                <select id="select-jogo">
+                    <option value="">Carregando jogos...</option>
+                </select>
+                <div id="placar-oficial-container" class="placar-oficial-destaque"></div>
+            </div>
+
+            <table class="tabela-raiox">
+                <thead>
+                    <tr>
+                        <th style="text-align: left;">Jogador</th>
+                        <th>Palpite</th>
+                        <th>Pontos</th>
+                    </tr>
+                </thead>
+                <tbody id="corpo-raiox">
+                    <tr><td colspan="3">Selecione um jogo acima para ver os palpites.</td></tr>
+                </tbody>
+            </table>
+        </main>
+    </div>
+
+    <script type="module" src="js/espiar-jogo.js"></script>
+</body>
+</html>

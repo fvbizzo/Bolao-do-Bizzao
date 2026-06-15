@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espiar Resultados - Bolão do Bizzão</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Estilos específicos para a tela de espionagem se misturarem com o seu style.css */
+        .navegacao-usuarios { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: #e9ecef; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nome-espiado { 
+            font-size: 1.4em; 
+            color: #008000; 
+            font-weight: bold; 
+            text-align: center;
+        }
+        .btn-seta {
+            background: #008000;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-seta:hover {
+            background: #005c00;
+        }
+        .secao-titulo { 
+            color: #333; 
+            margin: 30px 0 15px 0; 
+            border-bottom: 2px solid #008000; 
+            padding-bottom: 5px; 
+            font-size: 1.3em;
+        }
+        .tabela-espiar { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 30px; 
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .tabela-espiar th {
+            background: #333;
+            color: white;
+            padding: 12px;
+            font-weight: normal;
+        }
+        .tabela-espiar td { 
+            padding: 12px; 
+            border-bottom: 1px solid #ddd; 
+            text-align: center; 
+        }
+        .pts-ganhos { 
+            font-weight: bold; 
+            color: #008000; 
+        }
+        .palpite-oculto { 
+            color: #888; 
+            font-style: italic; 
+            font-size: 0.9em; 
+        }
+        .grid-grupos-espiar { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+            gap: 15px; 
+            margin-bottom: 30px; 
+        }
+        .grupo-caixa-espiar { 
+            background: white; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            padding: 15px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .grupo-caixa-espiar strong {
+            color: #333;
+            font-size: 1.1em;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .linha-grupo-espiar { 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 0.95em; 
+            padding: 6px 0; 
+            border-bottom: 1px dashed #eee; 
+        }
+        .linha-grupo-espiar:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body class="palpites-page"> <div class="app-container">
+        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1>Resultados dos Rivais 🔍</h1>
+            <a href="palpites.html" class="btn-secundario" style="text-decoration: none; padding: 10px 15px; background: #333; color: white; border-radius: 5px; font-weight: bold;">Voltar aos Palpites</a>
+        </header>
+
+        <main>
+            <div class="navegacao-usuarios">
+                <button id="btn-user-ant" class="btn-seta">◀</button>
+                <div id="nome-usuario-atual" class="nome-espiado">Buscando jogadores do bolão...</div>
+                <button id="btn-user-prox" class="btn-seta">▶</button>
+            </div>
+
+            <h3 class="secao-titulo">Posições Finais dos Grupos (1º ao 4º)</h3>
+            <div id="container-grupos-espiar" class="grid-grupos-espiar">
+                </div>
+
+            <h3 class="secao-titulo">Placares de Todas as Partidas</h3>
+            <table class="tabela-espiar">
+                <thead>
+                    <tr>
+                        <th>Fase / Confronto</th>
+                        <th>Palpite do Rival</th>
+                        <th>Placar Oficial</th>
+                        <th>Pontos Ganhos</th>
+                    </tr>
+                </thead>
+                <tbody id="corpo-espiar">
+                    </tbody>
+            </table>
+        </main>
+    </div>
+
+    <script type="module" src="js/espiar.js"></script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 import { listaJogos } from "./jogos.js";
 
 const firebaseConfig = {
@@ -17,7 +17,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // --- TRAVA TEMPORAL ---
-const DATA_LIMITE_GRUPOS = new Date("2026-06-11T12:00:00Z"); // Ajuste para o 1º jogo da Copa
+const DATA_LIMITE_GRUPOS = new Date("2026-06-11T16:00:00Z"); // Ajuste para o 1º jogo da Copa
 
 let usuarioLogado = null;
 let rodadaAtual = 1;
@@ -114,7 +114,7 @@ function card(j) {
         "🇧🇪":"be", "🇪🇬":"eg", "🇮🇷":"ir", "🇳🇿":"nz", "🇪🇸":"es", "🇨🇻":"cv", 
         "🇸🇦":"sa", "🇺🇾":"uy", "🇫🇷":"fr", "🇸🇳":"sn", "🇮🇶":"iq", "🇳🇴":"no", 
         "🇦🇷":"ar", "🇩🇿":"dz", "🇦🇹":"at", "🇯🇴":"jo", "🇵🇹":"pt", "🇨🇩":"cd", 
-        "🇺🇿":"uz", "🇨🇴":"co", "🏴󠁧󠁢󠁥󠁮󠁧󠁿":"gb-eng", "🇭🇷":"hr", "🇬🇭":"gh", "🇵🇦":"pa" 
+        "🇺🇿":"uz", "🇨🇴":"co", "🏴󠁧󠁢󠁥󠁮󠁧󠁿":"gb-eng", "🇭🇷":"hr", "🇬罕":"gh", "🇵🇦":"pa" 
     };
     const siglaA = emojiParaSigla[j.bandeiraA] || 'un';
     const siglaB = emojiParaSigla[j.bandeiraB] || 'un';
@@ -138,20 +138,21 @@ function card(j) {
 }
 
 document.getElementById('btn-salvar')?.addEventListener('click', async () => {
-    const palpites = {}, posicoes = {}, agora = new Date();
+    const dadosParaSalvar = {}, agora = new Date();
     
-    // Jogos da lista fixa
+    // 1. Coleta jogos da lista fixa (Apenas os que não começaram)
     listaJogos.forEach(j => {
         if(agora < new Date(j.dataInicio)) {
             const a = document.getElementById(`input-${j.id}-A`)?.value;
             const b = document.getElementById(`input-${j.id}-B`)?.value;
             if(a !== "" && b !== "" && a !== undefined && b !== undefined) {
-                palpites[j.id] = { a:parseInt(a), b:parseInt(b) };
+                // Notação de ponto atualiza apenas a sub-chave do jogo
+                dadosParaSalvar[`palpites.${j.id}`] = { a:parseInt(a), b:parseInt(b) };
             }
         }
     });
 
-    // Mata-mata
+    // 2. Coleta jogos do Mata-mata (Apenas os que não começaram)
     const mataSnap = await getDocs(collection(db, "jogos_matamata"));
     mataSnap.forEach(d => {
         const j = d.data();
@@ -159,21 +160,48 @@ document.getElementById('btn-salvar')?.addEventListener('click', async () => {
             const a = document.getElementById(`input-${j.id}-A`)?.value;
             const b = document.getElementById(`input-${j.id}-B`)?.value;
             if(a !== "" && b !== "" && a !== undefined && b !== undefined) {
-                palpites[j.id] = { a:parseInt(a), b:parseInt(b) };
+                dadosParaSalvar[`palpites.${j.id}`] = { a:parseInt(a), b:parseInt(b) };
             }
         }
     });
 
-    // Posições de Grupo (Apenas se ainda não passou da data limite)
-    if(agora < DATA_LIMITE_GRUPOS) {
+    // 3. Coleta Posições de Grupo (Apenas se o prazo geral não venceu e os elementos estão na tela)
+    if(agora < DATA_LIMITE_GRUPOS && document.querySelector('.select-posicao')) {
         ["A","B","C","D","E","F","G","H","I","J","K","L"].forEach(g => {
-            const cols = [1,2,3,4].map(i => document.getElementById(`pos-${g}-${i}`)?.value || "");
-            if(cols.some(c => c !== "")) posicoes[g] = cols;
+            if (document.getElementById(`pos-${g}-1`)) {
+                const cols = [1,2,3,4].map(i => document.getElementById(`pos-${g}-${i}`)?.value || "");
+                if(cols.some(c => c !== "")) {
+                    dadosParaSalvar[`posicoes.${g}`] = cols;
+                }
+            }
         });
     }
 
-    await setDoc(doc(db, "palpites", usuarioLogado.uid), { palpites, posicoes }, { merge: true });
-    alert("Salvo!");
+    // Se não houver nada para salvar, cancela a operação
+    if (Object.keys(dadosParaSalvar).length === 0) {
+        alert("Nenhum palpite elegível para alteração no momento!");
+        return;
+    }
+
+    try {
+        // O updateDoc atualiza cirurgicamente apenas os campos mapeados,
+        // sem nunca apagar o resto do documento!
+        await updateDoc(doc(db, "palpites", usuarioLogado.uid), dadosParaSalvar);
+        alert("Palpites salvos com sucesso! ⚽");
+    } catch (error) {
+        // Proteção caso o documento principal falte (Raro)
+        if (error.code === 'not-found') {
+            const objetoEstruturado = { palpites: {}, posicoes: {} };
+            for (const chave in dadosParaSalvar) {
+                const partes = chave.split('.');
+                objetoEstruturado[partes[0]][partes[1]] = dadosParaSalvar[chave];
+            }
+            await setDoc(doc(db, "palpites", usuarioLogado.uid), objetoEstruturado, { merge: true });
+            alert("Palpites salvos com sucesso! ⚽");
+        } else {
+            alert("Erro ao salvar: " + error.message);
+        }
+    }
 });
 
 async function carregarPalpites() {
