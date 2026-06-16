@@ -30,9 +30,19 @@
                         </tbody>
                 </table>
             </div>
+
+            <div style="text-align:center; margin-top: 16px;">
+                <button id="btn-ver-grafico" class="btn-secundario" style="display:none;">Ver Evolução 📈</button>
+            </div>
+
+            <div id="secao-historico" class="ranking-caixa" style="display:none; margin-top:16px;">
+                <h3 style="color:#008000; font-size:1.1em; margin:0 0 12px 0;">Evolução de Pontos por Jogo</h3>
+                <canvas id="grafico-historico"></canvas>
+            </div>
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script type="module" src="js/ranking.js"></script>
 </body>
 </html>
