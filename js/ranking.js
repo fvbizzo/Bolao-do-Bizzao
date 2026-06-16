@@ -109,15 +109,18 @@ async function carregarHistorico() {
 
     const cores = ['#008000','#e74c3c','#3498db','#f39c12','#9b59b6','#1abc9c','#e67e22','#2980b9','#c0392b','#27ae60'];
 
-    const datasets = Object.entries(jogadores).map(([uid, nome], i) => ({
-        label: nome,
-        data: labels.map(label => historico[label][uid]?.pontos ?? null),
-        borderColor: cores[i % cores.length],
-        backgroundColor: cores[i % cores.length],
-        tension: 0.3,
-        spanGaps: false,
-        pointRadius: 4,
-    }));
+    const datasets = Object.entries(jogadores)
+        .map(([uid, nome], i) => ({
+            label: nome,
+            data: labels.map(label => historico[label][uid]?.pontos ?? null),
+            borderColor: cores[i % cores.length],
+            backgroundColor: cores[i % cores.length],
+            tension: 0.3,
+            spanGaps: false,
+            pointRadius: 4,
+        }))
+        // Oculta quem nunca pontuou (ex: usuário que não palpita) para não achatar o gráfico
+        .filter(ds => ds.data.some(p => p != null && p > 0));
 
     // Guarda os dados; o gráfico só é desenhado ao revelar a seção (ver toggle)
     dadosGrafico = { labels, datasets };
