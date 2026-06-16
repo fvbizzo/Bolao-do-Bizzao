@@ -145,6 +145,7 @@ document.getElementById('btn-criar-jogo')?.addEventListener('click', async () =>
 document.getElementById('btn-reset-oficiais')?.addEventListener('click', async () => {
     if(confirm("Tem certeza que deseja APAGAR todos os resultados oficiais? Isso zerará o cálculo do ranking.")){
         await setDoc(doc(db, "resultados", "oficiais"), {}); // Limpa o objeto de resultados
+        await deleteDoc(doc(db, "resultados", "historico_ranking")); // Limpa o histórico do gráfico (evita pontos órfãos)
         alert("Resultados oficiais resetados!");
         location.reload();
     }
@@ -214,6 +215,7 @@ document.getElementById('btn-processar-ranking')?.addEventListener('click', asyn
     mataDocs.forEach(d => infoMata[d.id] = d.data());
 
     const usuarios = await getDocs(collection(db, "usuarios"));
+    const ptsMap = {};
     for (const uDoc of usuarios.docs) {
         const palpiteDoc = await getDoc(doc(db, "palpites", uDoc.id));
         let pts = 0;
@@ -238,8 +240,26 @@ document.getElementById('btn-processar-ranking')?.addEventListener('click', asyn
                 }
             }
         }
+        ptsMap[uDoc.id] = pts;
         await setDoc(doc(db, "usuarios", uDoc.id), { pontos: pts }, { merge: true });
     }
+
+    // Salvar snapshot do ranking histórico (por quantidade de jogos apurados)
+    const snapshotAtual = {};
+    usuarios.docs.forEach(uDoc => {
+        const u = uDoc.data();
+        if (!u.isAdmin && u.email !== SEU_EMAIL) {
+            snapshotAtual[uDoc.id] = { nome: u.nome, pontos: ptsMap[uDoc.id] };
+        }
+    });
+    const ordenados = Object.entries(snapshotAtual).sort((a, b) => b[1].pontos - a[1].pontos);
+    ordenados.forEach(([uid, dados], i) => { dados.posicao = i + 1; });
+    const numJogos = Object.keys(resJogos).length;
+    const labelJogo = numJogos === 1 ? "1 jogo" : `${numJogos} jogos`;
+    await setDoc(doc(db, "resultados", "historico_ranking"), {
+        [labelJogo]: snapshotAtual
+    }, { merge: true });
+
     alert("Ranking atualizado!");
 });
 
