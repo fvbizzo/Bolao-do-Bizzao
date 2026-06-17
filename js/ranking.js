@@ -145,7 +145,9 @@ function desenharGrafico() {
             },
             scales: {
                 x: { ticks: { color: '#333' } },
-                y: { beginAtZero: true, ticks: { color: '#333' } }
+                // Auto-escala no intervalo dos pontos (não força o zero) para
+                // destacar a diferença entre jogadores com pontuações próximas
+                y: { grace: '10%', ticks: { color: '#333' } }
             }
         }
     });
