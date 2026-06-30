@@ -234,9 +234,9 @@ document.getElementById('btn-processar-ranking')?.addEventListener('click', asyn
                 for (const g in resGrupos) {
                     let acertos = 0;
                     for (let i=0; i<4; i++) {
-                        if (resGrupos[g][i] !== "" && d.posicoes[g][i] === resGrupos[g][i]) { pts += 10; acertos++; }
+                        if (resGrupos[g][i] !== "" && d.posicoes[g][i] === resGrupos[g][i]) { pts += 5; acertos++; }
                     }
-                    if (acertos === 4) pts += 10;
+                    if (acertos === 4) pts += 5;
                 }
             }
         }

@@ -65,7 +65,7 @@ async function inicializarRaioX() {
         // TRAVA TRIPLA: Bloqueia pelo campo, pelo e-mail ou pelo seu UID fixo!
         const ehAdmin = u.isAdmin === true || 
                         u.email === "sidocha19@gmail.com" || 
-                        uid === "H4D1mkSnRZZkzyolDbh6HqAo1wb2";
+                        uid === "nzOrvOgIkCYMWiVyBwH9KJkU2P62";
                         
         if (u.nome && !ehAdmin) {
             listaUsuarios.push({ uid: uid, nome: u.nome });
