@@ -36,7 +36,19 @@
             </div>
 
             <div id="secao-historico" class="ranking-caixa" style="display:none; margin-top:16px;">
-                <h3 style="color:#008000; font-size:1.1em; margin:0 0 12px 0;">Evolução de Pontos por Jogo</h3>
+                <h3 style="color:#008000; font-size:1.1em; margin:0 0 12px 0;">Evolução por Jogo</h3>
+
+                <div class="chart-tabs">
+                    <button id="tab-pontos" class="ativo">Pontos 📈</button>
+                    <button id="tab-posicao">Posição 🏁</button>
+                </div>
+
+                <div class="range-slider">
+                    <input type="range" id="range-inicio" min="0" step="1" value="0">
+                    <input type="range" id="range-fim" min="0" step="1" value="0">
+                </div>
+                <div id="janela-label"></div>
+
                 <canvas id="grafico-historico"></canvas>
             </div>
         </main>

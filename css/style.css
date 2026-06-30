@@ -316,3 +316,80 @@ header a:hover {
         max-width: 100%;
     }
 }
+
+/* --- CONTROLES DO GRÁFICO DE EVOLUÇÃO --- */
+.chart-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.chart-tabs button {
+    background-color: #6c757d; /* inativo, estilo .btn-secundario */
+    padding: 8px 18px;
+}
+.chart-tabs button.ativo {
+    background-color: #008000; /* ativo, verde primário */
+}
+
+.range-slider {
+    position: relative;
+    height: 36px;
+    margin: 4px 6px 0 6px;
+}
+.range-slider input[type="range"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    margin: 0;
+    height: 36px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: none;
+    pointer-events: none; /* só os polegares são clicáveis */
+}
+/* Trilho compartilhado, desenhado uma vez sob os dois inputs */
+.range-slider::before {
+    content: "";
+    position: absolute;
+    top: 16px;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: #ccc;
+}
+.range-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    pointer-events: auto;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #008000;
+    border: 2px solid #fff;
+    box-shadow: 0 0 2px rgba(0,0,0,0.4);
+    cursor: pointer;
+}
+.range-slider input[type="range"]::-moz-range-thumb {
+    pointer-events: auto;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #008000;
+    border: 2px solid #fff;
+    cursor: pointer;
+}
+.range-slider input[type="range"]::-moz-range-track {
+    background: none;
+}
+.range-slider input[type="range"]:disabled::-webkit-slider-thumb { background: #ccc; cursor: default; }
+.range-slider input[type="range"]:disabled::-moz-range-thumb { background: #ccc; cursor: default; }
+
+#janela-label {
+    text-align: center;
+    color: #555;
+    font-size: 0.9em;
+    margin: 4px 0 12px 0;
+}

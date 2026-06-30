@@ -65,7 +65,10 @@ document.getElementById('btn-sair')?.addEventListener('click', () => {
 });
 
 let graficoInstance = null;
-let dadosGrafico = null; // { labels, datasets } preparados, prontos para desenhar
+let labels = [];              // rótulos completos do eixo X, ordenados (ex: "5 jogos")
+let series = [];              // [{ nome, cor, pontos:[], posicao:[] }] alinhados a `labels`
+let metricaAtual = 'pontos';  // 'pontos' | 'posicao'
+let janela = { inicio: 0, fim: 0 }; // índices em `labels` (inclusivos)
 
 document.getElementById('btn-ver-grafico')?.addEventListener('click', () => {
     const secao = document.getElementById('secao-historico');
@@ -92,52 +95,124 @@ async function carregarHistorico() {
     if (chaves.length === 0) return;
 
     // Ordenar as chaves pelo número de jogos (ex: "5 jogos" → 5)
-    const labels = chaves.sort((a, b) => {
-        const numA = parseInt(a);
-        const numB = parseInt(b);
-        return numA - numB;
-    });
+    labels = chaves.sort((a, b) => parseInt(a) - parseInt(b));
 
     // Coletar todos os jogadores únicos (por UID)
     const jogadores = {};
     labels.forEach(label => {
-        const snap = historico[label];
-        Object.entries(snap).forEach(([uid, dados]) => {
+        Object.entries(historico[label]).forEach(([uid, dados]) => {
             if (!jogadores[uid]) jogadores[uid] = dados.nome;
         });
     });
 
     const cores = ['#008000','#e74c3c','#3498db','#f39c12','#9b59b6','#1abc9c','#e67e22','#2980b9','#c0392b','#27ae60'];
 
-    const datasets = Object.entries(jogadores)
+    series = Object.entries(jogadores)
         .map(([uid, nome], i) => ({
-            label: nome,
-            data: labels.map(label => historico[label][uid]?.pontos ?? null),
-            borderColor: cores[i % cores.length],
-            backgroundColor: cores[i % cores.length],
-            tension: 0.3,
-            spanGaps: false,
-            pointRadius: 4,
+            nome,
+            cor: cores[i % cores.length],
+            pontos: labels.map(label => historico[label][uid]?.pontos ?? null),
+            posicao: labels.map(label => historico[label][uid]?.posicao ?? null),
         }))
         // Oculta quem nunca pontuou (ex: usuário que não palpita) para não achatar o gráfico
-        .filter(ds => ds.data.some(p => p != null && p > 0));
+        .filter(s => s.pontos.some(p => p != null && p > 0));
 
-    // Guarda os dados; o gráfico só é desenhado ao revelar a seção (ver toggle)
-    dadosGrafico = { labels, datasets };
+    janela = { inicio: 0, fim: labels.length - 1 };
+    configurarControles();
     btnGrafico.style.display = 'inline-block';
 }
 
+// Liga os controles uma única vez (os elementos são estáticos no HTML).
+// Os handlers leem o estado de módulo, então funcionam assim que os dados carregam.
+(function ligarControles() {
+    const rInicio = document.getElementById('range-inicio');
+    const rFim = document.getElementById('range-fim');
+    if (!rInicio || !rFim) return;
+
+    rInicio.addEventListener('input', () => {
+        janela.inicio = Math.min(+rInicio.value, +rFim.value);
+        rInicio.value = janela.inicio; // não deixa cruzar o outro polegar
+        atualizarJanela();
+    });
+    rFim.addEventListener('input', () => {
+        janela.fim = Math.max(+rFim.value, +rInicio.value);
+        rFim.value = janela.fim;
+        atualizarJanela();
+    });
+
+    document.getElementById('tab-pontos')?.addEventListener('click', () => trocarMetrica('pontos'));
+    document.getElementById('tab-posicao')?.addEventListener('click', () => trocarMetrica('posicao'));
+})();
+
+function configurarControles() {
+    const rInicio = document.getElementById('range-inicio');
+    const rFim = document.getElementById('range-fim');
+    const max = labels.length - 1;
+
+    [rInicio, rFim].forEach(r => { r.min = 0; r.max = max; });
+    rInicio.value = janela.inicio;
+    rFim.value = janela.fim;
+    // Com um único rótulo não há janela para escolher
+    rInicio.disabled = rFim.disabled = max <= 0;
+
+    atualizarLabelJanela();
+}
+
+function trocarMetrica(metrica) {
+    if (metrica === metricaAtual) return;
+    metricaAtual = metrica;
+    document.getElementById('tab-pontos').classList.toggle('ativo', metrica === 'pontos');
+    document.getElementById('tab-posicao').classList.toggle('ativo', metrica === 'posicao');
+    desenharGrafico();
+}
+
+function atualizarJanela() {
+    atualizarLabelJanela();
+    desenharGrafico();
+}
+
+function atualizarLabelJanela() {
+    const el = document.getElementById('janela-label');
+    if (el) el.textContent = `De ${labels[janela.inicio]} até ${labels[janela.fim]}`;
+}
+
 function desenharGrafico() {
-    if (!dadosGrafico) return;
+    if (!series.length) return;
 
     const canvas = document.getElementById('grafico-historico');
     if (!canvas) return;
 
-    if (graficoInstance) graficoInstance.destroy();
+    const labelsJanela = labels.slice(janela.inicio, janela.fim + 1);
+    const datasets = series.map(s => ({
+        label: s.nome,
+        data: s[metricaAtual].slice(janela.inicio, janela.fim + 1),
+        borderColor: s.cor,
+        backgroundColor: s.cor,
+        tension: 0.3,
+        spanGaps: false,
+        pointRadius: 4,
+    }));
+
+    const yScale = metricaAtual === 'posicao'
+        // Eixo invertido: 1º no topo; linhas que se cruzam = ultrapassagens
+        ? { reverse: true, ticks: { color: '#333', stepSize: 1, precision: 0, callback: v => v + 'º' } }
+        // Auto-escala no intervalo dos pontos (não força o zero) para
+        // destacar a diferença entre jogadores com pontuações próximas
+        : { grace: '10%', ticks: { color: '#333' } };
+
+    // Atualiza no lugar quando o gráfico já existe (arrastar o slider dispara
+    // muitos eventos) e só cria uma nova instância na primeira exibição
+    if (graficoInstance) {
+        graficoInstance.data.labels = labelsJanela;
+        graficoInstance.data.datasets = datasets;
+        graficoInstance.options.scales.y = yScale;
+        graficoInstance.update('none');
+        return;
+    }
 
     graficoInstance = new Chart(canvas, {
         type: 'line',
-        data: dadosGrafico,
+        data: { labels: labelsJanela, datasets },
         options: {
             responsive: true,
             plugins: {
@@ -145,9 +220,7 @@ function desenharGrafico() {
             },
             scales: {
                 x: { ticks: { color: '#333' } },
-                // Auto-escala no intervalo dos pontos (não força o zero) para
-                // destacar a diferença entre jogadores com pontuações próximas
-                y: { grace: '10%', ticks: { color: '#333' } }
+                y: yScale
             }
         }
     });
